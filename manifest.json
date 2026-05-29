@@ -1,7 +1,7 @@
 {
   "id": "obsidian-a-site",
   "name": "Obsidian-a-Site",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "minAppVersion": "0.15.0",
   "description": "Exporta tus notas de Obsidian a una wiki interactiva estática ultra-ligera con diseño Glassmorphic y grafo interactivo.",
   "author": "Horacio Degiorgi",
