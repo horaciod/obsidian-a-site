@@ -1,4 +1,4 @@
-const { Plugin, PluginSettingTab, Setting, Notice, Modal } = require('obsidian');
+const { Plugin, PluginSettingTab, Setting, Notice, Modal, TFolder } = require('obsidian');
 const path = require('path');
 const fs = require('fs');
 
@@ -33,6 +33,22 @@ class ObsidianSitePlugin extends Plugin {
 
     // Add Settings Tab
     this.addSettingTab(new ObsidianSiteSettingTab(this.app, this));
+
+    // Register context menu for File Explorer folders
+    this.registerEvent(
+      this.app.workspace.on('file-menu', (menu, file) => {
+        if (file instanceof TFolder) {
+          menu.addItem((item) => {
+            item
+              .setTitle('⚡ Exportar carpeta como Wiki')
+              .setIcon('share-2')
+              .onClick(() => {
+                this.openExportModalForFolder(file.path);
+              });
+          });
+        }
+      })
+    );
   }
 
   async loadSettings() {
@@ -45,6 +61,14 @@ class ObsidianSitePlugin extends Plugin {
 
   openExportModal() {
     new ExportModal(this.app, this).open();
+  }
+
+  openExportModalForFolder(folderPath) {
+    const modal = new ExportModal(this.app, this);
+    // Pre-populate Origin Directory with the right-clicked folder path
+    // If it's the root '/', leave it empty so it defaults to the whole vault
+    modal.settings.originDir = folderPath === '/' ? '' : folderPath;
+    modal.open();
   }
 
   async buildSite() {

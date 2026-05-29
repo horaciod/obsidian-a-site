@@ -94,6 +94,7 @@ Define el ID del plugin, versión, nombre del autor y requisitos mínimos.
     *   Registra configuraciones (`originDir`, `destDir`, `siteTitle`, `siteSubtitle`, `homeNote`).
     *   Añade un botón en la barra lateral izquierda (Ribbon Icon) para disparar la exportación rápidamente con un solo clic.
     *   Registra el comando "Build Static Wiki" en la paleta de comandos (`Ctrl/Cmd + P`).
+    *   **Acción de Menú Contextual**: Añade la entrada `"⚡ Exportar carpeta como Wiki"` al hacer clic derecho sobre cualquier carpeta en el explorador de archivos de Obsidian. Al seleccionarla, abre la ventana modal de exportación precargando automáticamente la ruta de esa carpeta seleccionada como origen (`originDir`).
     *   **Carga Dinámica Resiliente**: Para evitar que la carga del plugin falle por restricciones del sistema de módulos de Obsidian al iniciar (`onload`), `build.js` se importa dinámicamente utilizando la ruta absoluta calculada mediante `vault.adapter.getBasePath()` y `this.manifest.dir` al momento de ejecutar la exportación.
     *   Ejecuta la función `runBuild(config)` importada desde `build.js`.
     *   Muestra notificaciones nativas de Obsidian (`new Notice()`) sobre el estado de la compilación.
