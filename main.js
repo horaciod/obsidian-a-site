@@ -97,6 +97,11 @@ class ObsidianSitePlugin extends Plugin {
     const pluginPath = path.join(vaultPath, this.manifest.dir);
     const buildScriptPath = path.join(pluginPath, 'build.js');
     
+    // Avoid require cache in Node.js/Electron for dynamic script updates
+    if (require.cache[buildScriptPath]) {
+      delete require.cache[buildScriptPath];
+    }
+
     let runBuild;
     try {
       // Try standard Node require with dynamic absolute path

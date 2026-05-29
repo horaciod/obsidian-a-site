@@ -53,8 +53,8 @@ document.addEventListener('DOMContentLoaded', () => {
  */
 async function initApp() {
   try {
-    // 1. Fetch raw database compile
-    const response = await fetch('data.json');
+    // 1. Fetch raw database compile with cache busting
+    const response = await fetch(`data.json?t=${Date.now()}`);
     if (!response.ok) throw new Error('No se pudo cargar data.json');
     
     const db = await response.json();
