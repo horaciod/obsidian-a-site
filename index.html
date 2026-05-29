@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SIG Wiki - Documentación e Implementación de WAF</title>
+  
+  <!-- Modern Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- CSS Prism Syntax Highlighting -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+  
+  <!-- App Custom CSS -->
+  <link rel="stylesheet" href="styles.css">
+  
+  <!-- HTML5 SEO Meta -->
+  <meta name="description" content="Portal interactivo de documentación para la implementación del SIG, ProxyManager y Anubis. Visualiza notas de forma dinámica y explora sus relaciones.">
+</head>
+<body>
+
+  <!-- Background Glowing Orbs for Aesthetic -->
+  <div class="glow-orb orb-1"></div>
+  <div class="glow-orb orb-2"></div>
+  <div class="glow-orb orb-3"></div>
+
+  <div class="app-container">
+    
+    <!-- Sidebar Panel -->
+    <aside class="sidebar glass" id="sidebar">
+      <div class="sidebar-header">
+        <div class="logo-container">
+          <i data-lucide="shield-check" class="logo-icon"></i>
+          <div>
+            <h1 class="logo-text">hDOCS</h1>
+            <span class="logo-subtext">Anubis y Proxy Manager</span>
+          </div>
+        </div>
+        <button class="icon-btn collapse-btn" id="sidebarCollapseBtn" title="Colapsar lateral" aria-label="Colapsar lateral">
+          <i data-lucide="chevron-left"></i>
+        </button>
+      </div>
+
+      <!-- Search Section -->
+      <div class="search-box">
+        <i data-lucide="search" class="search-icon"></i>
+        <input type="text" id="searchInput" placeholder="Buscar notas o contenido..." aria-label="Buscar notas">
+        <button id="clearSearchBtn" class="clear-search-btn" title="Limpiar búsqueda" style="display: none;">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+
+      <!-- Navigation List -->
+      <nav class="notes-nav" aria-label="Navegación de notas">
+        <h2 class="nav-title">Documentos</h2>
+        <ul class="notes-list" id="notesList">
+          <!-- Dynamically populated -->
+        </ul>
+      </nav>
+
+      <!-- Sidebar Footer / Status -->
+      <div class="sidebar-footer">
+        <div class="status-indicator">
+          <span class="pulse-dot"></span>
+          <span id="statsLabel">Cargando base de conocimiento...</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Sidebar Trigger (when collapsed) -->
+    <button class="sidebar-trigger glass" id="sidebarTrigger" title="Expandir lateral" aria-label="Expandir lateral" style="display: none;">
+      <i data-lucide="menu"></i>
+    </button>
+
+    <!-- Main Content Reader -->
+    <main class="main-content" id="mainContent">
+      <header class="content-header">
+        <div class="breadcrumbs">
+          <a href="#" class="breadcrumb-item" data-target="index">SIG</a>
+          <span class="breadcrumb-separator">/</span>
+          <span class="breadcrumb-item active" id="currentBreadcrumb">Cargando...</span>
+        </div>
+        <div class="header-actions">
+          <button class="btn btn-secondary" id="toggleGraphBtn" title="Alternar Vista de Grafo">
+            <i data-lucide="git-fork"></i>
+            <span>Relaciones</span>
+          </button>
+        </div>
+      </header>
+
+      <article class="note-container glass" id="noteViewContainer">
+        <!-- Back navigation dynamic indicator -->
+        <div class="note-header-wrap">
+          <h2 class="note-title" id="noteTitle" tabindex="-1">Cargando Nota...</h2>
+          <div class="note-meta">
+            <i data-lucide="file-text" class="meta-icon"></i>
+            <span id="noteFilename">archivo.md</span>
+          </div>
+        </div>
+
+        <!-- Rendered markdown output -->
+        <section class="markdown-body" id="noteBody">
+          <div class="loader">
+            <div class="spinner"></div>
+            <p>Compilando base de conocimiento interactiva...</p>
+          </div>
+        </section>
+
+        <!-- Backlinks and outgoing links -->
+        <footer class="note-footer">
+          <div class="relations-panel">
+            <div class="relation-column">
+              <h3>
+                <i data-lucide="link-2" class="col-icon text-indigo"></i>
+                Referencias a esta nota (Backlinks)
+              </h3>
+              <ul class="relation-links" id="backlinksList">
+                <li class="empty-state">Ninguna otra nota hace referencia a esta sección.</li>
+              </ul>
+            </div>
+            <div class="relation-column">
+              <h3>
+                <i data-lucide="external-link" class="col-icon text-purple"></i>
+                Enlaces salientes
+              </h3>
+              <ul class="relation-links" id="outgoingLinksList">
+                <li class="empty-state">Esta nota no tiene enlaces salientes.</li>
+              </ul>
+            </div>
+          </div>
+        </footer>
+      </article>
+    </main>
+
+    <!-- Interactive Graph Visualization Panel (Right Sidebar / Split Screen) -->
+    <section class="graph-panel glass" id="graphPanel">
+      <header class="graph-header">
+        <div class="graph-title-container">
+          <i data-lucide="network" class="graph-header-icon"></i>
+          <h2>Mapa de Relaciones</h2>
+        </div>
+        <div class="graph-controls">
+          <button class="icon-btn" id="graphResetBtn" title="Centrar grafo" aria-label="Centrar grafo">
+            <i data-lucide="refresh-cw"></i>
+          </button>
+          <button class="icon-btn close-graph-btn" id="closeGraphBtn" title="Cerrar panel de relaciones" aria-label="Cerrar panel de relaciones">
+            <i data-lucide="x"></i>
+          </button>
+        </div>
+      </header>
+      
+      <div class="canvas-container" id="canvasContainer">
+        <!-- Interactive HTML5 Canvas -->
+        <canvas id="graphCanvas"></canvas>
+        
+        <!-- Legend Overlay -->
+        <div class="graph-legend glass">
+          <div class="legend-item"><span class="legend-dot active"></span><span>Nota Activa</span></div>
+          <div class="legend-item"><span class="legend-dot link"></span><span>Nota Conectada</span></div>
+          <div class="legend-item"><span class="legend-dot default"></span><span>Otras Notas</span></div>
+        </div>
+
+        <!-- Graph Zoom/Pan Controls -->
+        <div class="graph-zoom-indicator" id="zoomIndicator">100%</div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- Lightbox Modal for Images -->
+  <div class="lightbox" id="imageLightbox" role="dialog" aria-modal="true" aria-hidden="true">
+    <button class="lightbox-close" id="lightboxCloseBtn" aria-label="Cerrar imagen">&times;</button>
+    <div class="lightbox-content">
+      <img id="lightboxImage" src="" alt="Vista ampliada">
+      <div class="lightbox-caption" id="lightboxCaption">Título de la imagen</div>
+    </div>
+  </div>
+
+  <!-- 3rd Party Libraries via CDN -->
+  <!-- Markdown parser -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  
+  <!-- Prism Syntax Highlighting -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Main Application JavaScript -->
+  <script src="app.js"></script>
+</body>
+</html>
