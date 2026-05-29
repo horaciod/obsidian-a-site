@@ -98,8 +98,13 @@ class ObsidianSitePlugin extends Plugin {
     const buildScriptPath = path.join(pluginPath, 'build.js');
     
     // Avoid require cache in Node.js/Electron for dynamic script updates
-    if (require.cache[buildScriptPath]) {
-      delete require.cache[buildScriptPath];
+    try {
+      const nodeRequire = (typeof window !== 'undefined' && window.require) ? window.require : require;
+      if (nodeRequire && nodeRequire.cache && nodeRequire.cache[buildScriptPath]) {
+        delete nodeRequire.cache[buildScriptPath];
+      }
+    } catch (cacheError) {
+      console.warn('No se pudo limpiar el cache de require:', cacheError);
     }
 
     let runBuild;
