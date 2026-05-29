@@ -1,4 +1,4 @@
-const { Plugin, PluginSettingTab, Setting, Notice } = require('obsidian');
+const { Plugin, PluginSettingTab, Setting, Notice, Modal } = require('obsidian');
 const path = require('path');
 const fs = require('fs');
 
@@ -18,7 +18,7 @@ class ObsidianSitePlugin extends Plugin {
 
     // Ribbon icon on left bar
     this.addRibbonIcon('share-2', 'Exportar Wiki Estática (Obsidian-a-Site)', () => {
-      this.buildSite();
+      this.openExportModal();
     });
 
     // Register Command in Command Palette
@@ -26,7 +26,7 @@ class ObsidianSitePlugin extends Plugin {
       id: 'build-static-wiki',
       name: 'Compilar y Exportar Wiki Estática',
       callback: () => {
-        this.buildSite();
+        this.openExportModal();
       }
     });
 
@@ -40,6 +40,10 @@ class ObsidianSitePlugin extends Plugin {
 
   async saveSettings() {
     await this.saveData(this.settings);
+  }
+
+  openExportModal() {
+    new ExportModal(this.app, this).open();
   }
 
   async buildSite() {
@@ -203,6 +207,111 @@ class ObsidianSiteSettingTab extends PluginSettingTab {
           await this.plugin.saveSettings();
         })
       );
+  }
+}
+
+class ExportModal extends Modal {
+  constructor(app, plugin) {
+    super(app);
+    this.plugin = plugin;
+    // Clone settings locally for temporary editing
+    this.settings = Object.assign({}, plugin.settings);
+  }
+
+  onOpen() {
+    const { contentEl } = this;
+    contentEl.empty();
+
+    contentEl.createEl('h2', { text: '⚡ Exportar Wiki Estática' });
+    contentEl.createEl('p', { 
+      text: 'Configura o valida las siguientes opciones antes de ejecutar la compilación de tu sitio web.',
+      cls: 'setting-item-description'
+    });
+
+    // 1. Origin Directory setting
+    new Setting(contentEl)
+      .setName('Directorio de Notas (.md)')
+      .setDesc('Origen de notas. Vacío para exportar toda tu bóveda.')
+      .addText(text => text
+        .setPlaceholder('Ej: notas/ o dejar vacío')
+        .setValue(this.settings.originDir)
+        .onChange(value => this.settings.originDir = value)
+      );
+
+    // 2. Destination Directory setting
+    new Setting(contentEl)
+      .setName('Directorio de Salida (Web)')
+      .setDesc('Destino de la web. Vacío para usar la carpeta "wiki-dist" en tu bóveda.')
+      .addText(text => text
+        .setPlaceholder('Ej: /var/www/wiki o wiki-dist')
+        .setValue(this.settings.destDir)
+        .onChange(value => this.settings.destDir = value)
+      );
+
+    // 3. Site Title setting
+    new Setting(contentEl)
+      .setName('Título del Sitio')
+      .setDesc('Título principal en el encabezado y barra de título.')
+      .addText(text => text
+        .setPlaceholder('Ej: Mi Wiki')
+        .setValue(this.settings.siteTitle)
+        .onChange(value => this.settings.siteTitle = value)
+      );
+
+    // 4. Site Subtitle setting
+    new Setting(contentEl)
+      .setName('Subtítulo del Sitio')
+      .setDesc('Subtexto descriptivo lateral.')
+      .addText(text => text
+        .setPlaceholder('Ej: Notas y Enlaces')
+        .setValue(this.settings.siteSubtitle)
+        .onChange(value => this.settings.siteSubtitle = value)
+      );
+
+    // 5. Site SEO Meta Description setting
+    new Setting(contentEl)
+      .setName('Descripción SEO Meta')
+      .addText(text => text
+        .setPlaceholder('Ej: Portal de notas...')
+        .setValue(this.settings.siteDescription)
+        .onChange(value => this.settings.siteDescription = value)
+      );
+
+    // 6. Home Note / Landing Note setting
+    new Setting(contentEl)
+      .setName('Página Inicial')
+      .setDesc('Nombre de la nota inicial (sin extensión .md).')
+      .addText(text => text
+        .setPlaceholder('Ej: index')
+        .setValue(this.settings.homeNote)
+        .onChange(value => this.settings.homeNote = value)
+      );
+
+    // Buttons
+    const buttonContainer = contentEl.createDiv({ cls: 'modal-button-container' });
+    buttonContainer.style.display = 'flex';
+    buttonContainer.style.justifyContent = 'flex-end';
+    buttonContainer.style.gap = '10px';
+    buttonContainer.style.marginTop = '20px';
+
+    const cancelBtn = buttonContainer.createEl('button', { text: 'Cancelar' });
+    cancelBtn.addEventListener('click', () => this.close());
+
+    const exportBtn = buttonContainer.createEl('button', { 
+      text: '⚡ Exportar y Compilar', 
+      cls: 'mod-cta' 
+    });
+    exportBtn.addEventListener('click', async () => {
+      // Save settings to plugin
+      this.plugin.settings = Object.assign(this.plugin.settings, this.settings);
+      await this.plugin.saveSettings();
+      
+      // Close modal
+      this.close();
+      
+      // Run export
+      this.plugin.buildSite();
+    });
   }
 }
 
