@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SIG Wiki - Documentación e Implementación de WAF</title>
+  <title>{{SITE_TITLE}}</title>
   
   <!-- Modern Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -17,7 +17,7 @@
   <link rel="stylesheet" href="styles.css">
   
   <!-- HTML5 SEO Meta -->
-  <meta name="description" content="Portal interactivo de documentación para la implementación del SIG, ProxyManager y Anubis. Visualiza notas de forma dinámica y explora sus relaciones.">
+  <meta name="description" content="{{SITE_DESCRIPTION}}">
 </head>
 <body>
 
@@ -34,8 +34,8 @@
         <div class="logo-container">
           <i data-lucide="shield-check" class="logo-icon"></i>
           <div>
-            <h1 class="logo-text">hDOCS</h1>
-            <span class="logo-subtext">Anubis y Proxy Manager</span>
+            <h1 class="logo-text">{{SITE_LOGO_TEXT}}</h1>
+            <span class="logo-subtext">{{SITE_LOGO_SUBTEXT}}</span>
           </div>
         </div>
         <button class="icon-btn collapse-btn" id="sidebarCollapseBtn" title="Colapsar lateral" aria-label="Colapsar lateral">
@@ -82,7 +82,7 @@
     <main class="main-content" id="mainContent">
       <header class="content-header">
         <div class="breadcrumbs">
-          <a href="#" class="breadcrumb-item" data-target="index">SIG</a>
+          <a href="#" class="breadcrumb-item" data-target="{{HOME_NOTE}}">{{BREADCRUMB_HOME_TEXT}}</a>
           <span class="breadcrumb-separator">/</span>
           <span class="breadcrumb-item active" id="currentBreadcrumb">Cargando...</span>
         </div>

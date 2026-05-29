@@ -1,0 +1,10 @@
+{
+  "id": "obsidian-a-site",
+  "name": "Obsidian-a-Site",
+  "version": "1.0.0",
+  "minAppVersion": "0.15.0",
+  "description": "Exporta tus notas de Obsidian a una wiki interactiva estática ultra-ligera con diseño Glassmorphic y grafo interactivo.",
+  "author": "Horacio Degiorgi",
+  "authorUrl": "https://pinkary.com/@horaciod",
+  "isDesktopOnly": true
+}

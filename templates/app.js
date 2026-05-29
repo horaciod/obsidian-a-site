@@ -8,7 +8,7 @@
 const state = {
   notes: {},       // Notes directory map
   graph: { nodes: [], links: [] }, // Graph visualization nodes & edges
-  activeNoteId: '01-index',           // Default landing note
+  activeNoteId: '{{HOME_NOTE}}',           // Default landing note
   searchQuery: '',                 // Current search string
 };
 
@@ -71,8 +71,8 @@ async function initApp() {
     renderNotesList();
 
     // 5. Parse window hash or load default landing note
-    const initialHash = window.location.hash ? decodeURIComponent(window.location.hash.substring(1)) : 'index';
-    const startNote = state.notes[initialHash] ? initialHash : 'index';
+    const initialHash = window.location.hash ? decodeURIComponent(window.location.hash.substring(1)) : '{{HOME_NOTE}}';
+    const startNote = state.notes[initialHash] ? initialHash : '{{HOME_NOTE}}';
     
     // Initial DOM update (without transition on load)
     updateActiveNoteDOM(startNote);
@@ -167,7 +167,7 @@ function setupEventListeners() {
 
   // Handle SPA history back/forward operations
   window.addEventListener('popstate', (e) => {
-    const noteId = window.location.hash ? decodeURIComponent(window.location.hash.substring(1)) : 'index';
+    const noteId = window.location.hash ? decodeURIComponent(window.location.hash.substring(1)) : '{{HOME_NOTE}}';
     if (state.notes[noteId]) {
       navigateTo(noteId, false);
     }

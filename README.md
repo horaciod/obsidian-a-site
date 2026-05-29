@@ -33,24 +33,27 @@ El resultado es una **Single Page Application (SPA)** ultra-moderna, con estéti
 
 ## 📂 Estructura del Proyecto
 
-Una vez que clonas este repositorio, dispondrás de los siguientes archivos plantilla:
+Una vez que clonas este repositorio, dispondrás de los siguientes archivos:
 
 ```
 obsidian-a-site/
-├── build.js         # Script CLI compilador y exportador (Node.js)
-├── index.html       # Plantilla base HTML de la Wiki
-├── styles.css       # Hoja de estilos del sistema de diseño Glassmorphic
-├── app.js           # Motor de la SPA, Markdown renderer y física del Canvas
-└── README.md        # Esta guía de documentación
+├── templates/               # Plantillas para la web estática exportada
+│   ├── index.html           # Plantilla base HTML de la Wiki
+│   ├── styles.css           # Estilos del diseño Glassmorphic
+│   └── app.js               # Motor SPA, Markdown renderer y física del Canvas
+├── build.js                 # Script compilador y exportador (Node.js/Programático)
+├── manifest.json            # Metadatos del plugin de Obsidian
+├── main.js                  # Lógica del plugin de Obsidian
+└── README.md                # Esta guía de documentación
 ```
 
-Al ejecutar la herramienta, se generará una carpeta de destino autocontenida para producción con la siguiente estructura:
+Al ejecutar la exportación (vía CLI o Plugin), se generará una carpeta de destino autocontenida:
 
 ```
 carpeta_destino/
-├── index.html       # Visor web de producción
+├── index.html       # Visor web compilado con tus configuraciones
 ├── styles.css       # Estilos web copiados
-├── app.js           # Lógica interactiva copiada
+├── app.js           # Lógica interactiva con tu nota inicial configurada
 ├── data.json        # Base de datos JSON con las notas y conexiones compiladas
 └── *.png/*.jpg      # Todos tus recursos e imágenes sincronizados automáticamente
 ```
@@ -59,22 +62,65 @@ carpeta_destino/
 
 ## 🚀 Guía de Inicio Rápido
 
+<<<<<<< HEAD
 ### 1. Clonar el repositorio
 Clona el proyecto en tu máquina local:
 ```bash
 git clone https://github.com/horaciod/obsidian-a-site.git
 cd obsidian-a-site
 ```
-
-### 2. Exportar tus notas de Obsidian
-Ejecuta el script `build.js` pasándole la ruta de la carpeta que tiene tus notas y recursos (`-o`) y la carpeta de destino donde deseas compilar el sitio web (`-d`):
-
+||||||| parent of 644f23f (agregada la funcionalidad para instalar como plugin)
+### 1. Clonar el repositorio
+Clona el proyecto en tu máquina local:
 ```bash
-node build.js -o /ruta/a/tus/notas/obsidian -d ./dist
+git clone https://github.com/TU_USUARIO/obsidian-a-site.git
+cd obsidian-a-site
 ```
+=======
+Elige el método de exportación que prefieras:
+>>>>>>> 644f23f (agregada la funcionalidad para instalar como plugin)
 
-*   **`-o`**: Carpeta de origen con tus notas `.md` e imágenes.
-*   **`-d`**: Carpeta de destino donde se generará la aplicación estática lista para producción.
+### 🔌 Opción A: Como Plugin de Obsidian (Recomendado)
+
+1. **Instalación**:
+   * Clona este repositorio o copia sus contenidos directamente en la carpeta de plugins de tu bóveda de Obsidian:
+     `mi-boveda/.obsidian/plugins/obsidian-a-site/`
+   * Abre los ajustes de Obsidian, ve a **Plugins de terceros (Community plugins)** y activa **Obsidian-a-Site**.
+
+2. **Configuración**:
+   * En la sección de ajustes de **Obsidian-a-Site**, puedes personalizar:
+     * **Directorio de Notas**: Carpeta de origen (deja vacío para exportar toda la bóveda).
+     * **Directorio de Salida**: Ruta donde se guardará el sitio web (deja vacío para usar la carpeta `wiki-dist` en tu bóveda).
+     * **Título y Subtítulo**: Títulos y textos descriptivos en el panel lateral y cabecera HTML.
+     * **Página Inicial**: El ID de la nota inicial (por defecto `index`).
+
+3. **Exportación**:
+   * Haz clic en el icono del logo de compartir `⚡` (Ribbon Icon) en la barra lateral izquierda de Obsidian, o usa el comando `Compilar y Exportar Wiki Estática` en la paleta de comandos (`Ctrl/Cmd + P`).
+   * Aparecerá una notificación nativa cuando el proceso finalice con éxito.
+
+---
+
+### 💻 Opción B: Desde la Línea de Comandos (CLI)
+
+1. **Clonar el repositorio**:
+   ```bash
+   git clone https://github.com/TU_USUARIO/obsidian-a-site.git
+   cd obsidian-a-site
+   ```
+
+2. **Exportar tus notas**:
+   Ejecuta `build.js` con Node.js pasando la ruta origen (`-o`) y destino (`-d`). También puedes pasar configuraciones personalizadas opcionales:
+
+   ```bash
+   node build.js -o /ruta/a/tus/notas/obsidian -d ./dist --title "Mi Wiki" --subtitle "Mis Notas" --home "README"
+   ```
+
+   *   **`-o`**: Carpeta de origen con tus notas `.md` e imágenes.
+   *   **`-d`**: Carpeta de destino donde se generará la aplicación estática.
+   *   **`--title`**: Título del sitio web (para `<title>` y panel lateral).
+   *   **`--subtitle`**: Subtítulo o texto explicativo del logo lateral.
+   *   **`--home`**: ID de la nota inicial de aterrizaje (ej. `README` en vez de `index`).
+   *   **`--desc`**: Descripción meta SEO del sitio.
 
 ### 3. Servir el sitio web localmente
 Debido a que la aplicación carga la base de datos `data.json` de forma asíncrona mediante `fetch()`, el sitio web debe abrirse a través de un servidor HTTP local (para evitar restricciones de CORS del navegador al abrir archivos locales `file://`).

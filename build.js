@@ -1,42 +1,59 @@
 const fs = require('fs');
 const path = require('path');
 
-// CLI Arguments Parser
-const args = process.argv.slice(2);
-let originDir = '';
-let destDir = '';
+/**
+ * Core build/export logic.
+ * Can be called via CLI or programmatically (e.g. from an Obsidian plugin).
+ * 
+ * @param {Object} config Build configurations.
+ * @param {string} config.originDir Path to Markdown notes folder.
+ * @param {string} config.destDir Path to output static website folder.
+ * @param {string} [config.siteTitle] Title of the site.
+ * @param {string} [config.siteLogoText] Text for the logo in sidebar.
+ * @param {string} [config.siteSubtitle] Subtitle or description in sidebar.
+ * @param {string} [config.siteDescription] SEO Meta Description.
+ * @param {string} [config.homeNote] Landing/Index note ID (without .md).
+ * @param {string} [config.breadcrumbHomeText] Breadcrumbs home node name.
+ */
+function runBuild(config) {
+  const originDir = config.originDir;
+  const destDir = config.destDir;
 
-for (let i = 0; i < args.length; i++) {
-  if (args[i] === '-o') {
-    originDir = args[i + 1];
-    i++;
-  } else if (args[i] === '-d') {
-    destDir = args[i + 1];
-    i++;
+  if (!originDir || !destDir) {
+    console.error('\x1b[31mError: Parámetros incorrectos o insuficientes.\x1b[0m');
+    console.error('\x1b[33mUso correcto: node build.js -o <carpeta_origen> -d <carpeta_destino> [opciones]\x1b[0m');
+    console.error('  -o : Directorio que contiene las notas Markdown (.md) y los recursos.');
+    console.error('  -d : Directorio destino donde se generará la web autocontenida para producción.');
+    console.error('Opciones opcionales:');
+    console.error('  --title    : Título del sitio web (para <title> y el panel lateral).');
+    console.error('  --subtitle : Subtítulo o texto descriptivo en el panel lateral.');
+    console.error('  --home     : Nota de inicio (sin extensión .md, ej. "Home" o "README").');
+    console.error('  --desc     : Meta descripción para SEO.');
+    
+    if (require.main === module) {
+      process.exit(1);
+    } else {
+      throw new Error('Faltan carpetas de origen o destino en la configuración.');
+    }
   }
-}
 
-if (!originDir || !destDir) {
-  console.error('\x1b[31mError: Parámetros incorrectos o insuficientes.\x1b[0m');
-  console.error('\x1b[33mUso correcto: node exporter-obsidian/build.js -o <carpeta_origen> -d <carpeta_destino>\x1b[0m');
-  console.error('  -o : Directorio que contiene las notas Markdown (.md) y los recursos.');
-  console.error('  -d : Directorio destino donde se generará la web autocontenida para producción.');
-  process.exit(1);
-}
+  const resolvedOrigin = path.resolve(originDir);
+  const resolvedDest = path.resolve(destDir);
+  const templatesDir = path.join(__dirname, 'templates');
 
-const resolvedOrigin = path.resolve(originDir);
-const resolvedDest = path.resolve(destDir);
-const templatesDir = __dirname; // Inside exporter-obsidian/
-
-function run() {
   console.log(`\n\x1b[36m⚡ Iniciando Exportador de Obsidian a Wiki HTML interactivo...\x1b[0m`);
   console.log(`📂 Directorio Origen: ${resolvedOrigin}`);
   console.log(`🎯 Directorio Destino: ${resolvedDest}`);
 
   // Validate origin
   if (!fs.existsSync(resolvedOrigin)) {
-    console.error(`\x1b[31mError: El directorio de origen no existe: ${resolvedOrigin}\x1b[0m`);
-    process.exit(1);
+    const errorMsg = `El directorio de origen no existe: ${resolvedOrigin}`;
+    console.error(`\x1b[31mError: ${errorMsg}\x1b[0m`);
+    if (require.main === module) {
+      process.exit(1);
+    } else {
+      throw new Error(errorMsg);
+    }
   }
 
   // Create destination folder recursively
@@ -45,21 +62,54 @@ function run() {
     console.log(`\x1b[32m✔ Creada carpeta de destino: ${resolvedDest}\x1b[0m`);
   }
 
-  // 1. Copy Frontend Template Assets to destination
-  const templates = ['index.html', 'styles.css', 'app.js'];
-  let templatesCopied = 0;
-  templates.forEach(file => {
+  // Setup configuration options with backwards-compatible fallbacks
+  const siteTitle = config.siteTitle || 'SIG Wiki - Documentación e Implementación de WAF';
+  const siteLogoText = config.siteLogoText || config.siteTitle || 'hDOCS';
+  const siteLogoSubtext = config.siteSubtitle || 'Anubis y Proxy Manager';
+  const siteDescription = config.siteDescription || 'Portal interactivo de documentación para la implementación del SIG, ProxyManager y Anubis. Visualiza notas de forma dinámica y explora sus relaciones.';
+  const homeNote = config.homeNote || 'index';
+  const breadcrumbHomeText = config.breadcrumbHomeText || (config.siteTitle ? config.siteTitle.split(' ')[0] : 'SIG');
+
+  // 1. Process and copy Template Assets to destination with placeholders replaced
+  const textTemplates = ['index.html', 'app.js'];
+  const binaryTemplates = ['styles.css'];
+
+  // Process text templates (with placeholder replacement using callbacks to avoid replacement character interpretation issues)
+  textTemplates.forEach(file => {
     const srcPath = path.join(templatesDir, file);
     const destPath = path.join(resolvedDest, file);
-    
+
     if (fs.existsSync(srcPath)) {
-      fs.copyFileSync(srcPath, destPath);
-      templatesCopied++;
+      let content = fs.readFileSync(srcPath, 'utf8');
+
+      // Replace placeholders
+      content = content
+        .replace(/{{SITE_TITLE}}/g, () => siteTitle)
+        .replace(/{{SITE_DESCRIPTION}}/g, () => siteDescription)
+        .replace(/{{SITE_LOGO_TEXT}}/g, () => siteLogoText)
+        .replace(/{{SITE_LOGO_SUBTEXT}}/g, () => siteLogoSubtext)
+        .replace(/{{HOME_NOTE}}/g, () => homeNote)
+        .replace(/{{BREADCRUMB_HOME_TEXT}}/g, () => breadcrumbHomeText);
+
+      fs.writeFileSync(destPath, content, 'utf8');
+      console.log(`\x1b[32m✔ Procesada y copiada plantilla de texto: ${file}\x1b[0m`);
     } else {
-      console.warn(`\x1b[33m⚠ Advertencia: Plantilla no encontrada: ${file}\x1b[0m`);
+      console.warn(`\x1b[33m⚠ Advertencia: Plantilla de texto no encontrada: ${file}\x1b[0m`);
     }
   });
-  console.log(`\x1b[32m✔ Copiadas ${templatesCopied}/${templates.length} plantillas de interfaz a destino.\x1b[0m`);
+
+  // Process static/binary templates (direct copy)
+  binaryTemplates.forEach(file => {
+    const srcPath = path.join(templatesDir, file);
+    const destPath = path.join(resolvedDest, file);
+
+    if (fs.existsSync(srcPath)) {
+      fs.copyFileSync(srcPath, destPath);
+      console.log(`\x1b[32m✔ Copiada plantilla estática: ${file}\x1b[0m`);
+    } else {
+      console.warn(`\x1b[33m⚠ Advertencia: Plantilla estática no encontrada: ${file}\x1b[0m`);
+    }
+  });
 
   // 2. Scan resolvedOrigin for Markdown and Asset files
   const files = fs.readdirSync(resolvedOrigin);
@@ -154,6 +204,54 @@ function run() {
   });
   console.log(`\x1b[32m✔ Sincronizados ${copiedAssets} archivos de recursos (imágenes/documentos) en la carpeta de destino.\x1b[0m`);
   console.log(`\x1b[32;1m🎉 ¡Exportación completada con éxito! Visita la carpeta de destino para subirla a tu servidor.\x1b[0m\n`);
+
+  return {
+    success: true,
+    notesCount: graphNodes.length,
+    linksCount: graphLinks.length,
+    assetsCount: copiedAssets
+  };
 }
 
-run();
+// Determine if we are running directly from CLI or being imported
+if (require.main === module) {
+  // Parse command line arguments
+  const args = process.argv.slice(2);
+  const config = {
+    originDir: '',
+    destDir: '',
+    siteTitle: '',
+    siteLogoText: '',
+    siteSubtitle: '',
+    siteDescription: '',
+    homeNote: ''
+  };
+
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] === '-o') {
+      config.originDir = args[i + 1];
+      i++;
+    } else if (args[i] === '-d') {
+      config.destDir = args[i + 1];
+      i++;
+    } else if (args[i] === '--title') {
+      config.siteTitle = args[i + 1];
+      config.siteLogoText = args[i + 1]; // CLI default logo text to title
+      i++;
+    } else if (args[i] === '--subtitle') {
+      config.siteSubtitle = args[i + 1];
+      i++;
+    } else if (args[i] === '--home') {
+      config.homeNote = args[i + 1];
+      i++;
+    } else if (args[i] === '--desc') {
+      config.siteDescription = args[i + 1];
+      i++;
+    }
+  }
+
+  runBuild(config);
+} else {
+  // Export programmatic interface
+  module.exports = { runBuild };
+}
