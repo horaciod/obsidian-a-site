@@ -1,9 +1,13 @@
 # Obsidian-a-Site ⚡
 
+
 > **Obsidian-a-Site** es una herramienta CLI extremadamente ligera, de alto rendimiento y **sin dependencias externas** para exportar cualquier bóveda o carpeta de notas de Obsidian a un sitio web estático interactivo estilo Wiki personal (similar a la vista original de Obsidian).
+
+
 
 El resultado es una **Single Page Application (SPA)** ultra-moderna, con estética *Glassmorphism* (modo oscuro), un grafo interactivo de relaciones basado en física de partículas, buscador en tiempo real, retroenlaces (*backlinks*) automáticos y transiciones fluidas.
 
+> Ejemplo : [DEMO](https://docs.draphp.com)
 ---
 
 ## ✨ Características Principales
@@ -58,7 +62,7 @@ carpeta_destino/
 ### 1. Clonar el repositorio
 Clona el proyecto en tu máquina local:
 ```bash
-git clone https://github.com/TU_USUARIO/obsidian-a-site.git
+git clone https://github.com/horaciod/obsidian-a-site.git
 cd obsidian-a-site
 ```
 
