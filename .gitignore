@@ -1,0 +1,33 @@
+# Dependencias de Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Compilados y salidas de exportación (Wiki estática)
+dist/
+wiki-dist/
+dist-test/
+dist-test-custom/
+data.json
+
+# Archivos de entorno y configuración local
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Archivos temporales de agentes e IDEs
+.antigravitycli/
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+.trash/
+.recommenders/
+
+# Log y caché de npm
+.npm
+.eslintcache
