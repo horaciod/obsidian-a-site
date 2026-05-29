@@ -8,7 +8,7 @@
 const state = {
   notes: {},       // Notes directory map
   graph: { nodes: [], links: [] }, // Graph visualization nodes & edges
-  activeNoteId: 'index',           // Default landing note
+  activeNoteId: '01-index',           // Default landing note
   searchQuery: '',                 // Current search string
 };
 

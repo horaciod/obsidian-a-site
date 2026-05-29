@@ -397,6 +397,25 @@ body {
   100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
 }
 
+.app-credits {
+  margin-top: 12px;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.app-credits a {
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.app-credits a:hover {
+  color: var(--primary);
+}
+
 /* Sidebar Trigger floating button */
 .sidebar-trigger {
   position: absolute;
