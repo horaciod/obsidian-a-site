@@ -13,11 +13,13 @@ El resultado es una **Single Page Application (SPA)** ultra-moderna, con estéti
 ## ✨ Características Principales
 
 *   🚀 **Sin Dependencias en Servidor (Zero-Dependency CLI)**: Desarrollado puramente en Node.js de forma nativa. No requiere instalar ningún paquete de `npm` para realizar la exportación.
-*   🌐 **Sitio Web 100% Autocontenido**: El directorio de destino generado (`dist/` u otro) incluye el visor HTML, estilos, scripts y copias sincronizadas de tus recursos. Está listo para subirse directamente a GitHub Pages, Vercel, Netlify o cualquier servidor web (Nginx/Apache).
+*   🌐 **Sitio Web 100% Autocontenido**: El directorio de destino generado (`dist/` u otro) incluye el visor HTML, estilos, scripts y copias sincronizadas de tus recursos.
+*   📂 **Escaneo Recursivo Premium (Hasta 4 Niveles)**: Soporta la organización natural de tus notas Obsidian en carpetas y subcarpetas recursivas hasta 4 niveles de profundidad.
 *   🕸️ **Grafo de Relaciones Interactivo (Física en Canvas)**: Motor de física personalizado en HTML5 Canvas (sin librerías pesadas) que simula fuerzas físicas (repulsión magnética, tensión elástica y gravedad central). Soporta:
     *   Arrastre de nodos (*Drag & Drop*).
     *   Zoom con la rueda del ratón y paneo con arrastre libre de pantalla.
     *   Filtros visuales activos y de adyacencia según la nota seleccionada.
+    *   *Resaltado de Notas Huérfanas*: Las notas desconectadas se pintan con un contorno de aviso naranja/ámbar para identificarlas fácilmente.
     *   *Modo de ahorro de CPU*: La física entra en modo de reposo automático cuando los nodos se estabilizan.
 *   🔮 **Estética Glassmorphic Premium**: Interfaz moderna de modo oscuro con efectos de desenfoque de fondo (`backdrop-filter`), gradientes de neón indigo/púrpura y orbes luminosos flotantes.
 *   💫 **Navegación Fluida (View Transitions API)**: Cambios de nota inmediatos y elegantes con morphing visual nativo gracias al uso de la moderna API de transiciones del navegador.
@@ -28,6 +30,7 @@ El resultado es una **Single Page Application (SPA)** ultra-moderna, con estéti
     *   Visor Lightbox en pantalla completa al hacer clic sobre cualquier imagen del documento.
 *   🔗 **Retroenlaces Dinámicos (Backlinks)**: Detecta y genera automáticamente en el pie de página qué otros documentos del sistema hacen referencia al artículo actual.
 *   🔍 **Búsqueda Global Instantánea**: Buscador en tiempo real que filtra en segundos tanto los títulos como el contenido completo de todas tus notas.
+*   🛡️ **Gestión y Detección de Notas Huérfanas**: Identifica automáticamente las páginas sin enlaces entrantes, permitiendo excluirlas de la wiki generada (para ocultar borradores) o mostrarlas en la barra lateral con un sutil icono de enlace roto y tipografía atenuada.
 
 ---
 
@@ -62,23 +65,7 @@ carpeta_destino/
 
 ## 🚀 Guía de Inicio Rápido
 
-<<<<<<< HEAD
-### 1. Clonar el repositorio
-Clona el proyecto en tu máquina local:
-```bash
-git clone https://github.com/horaciod/obsidian-a-site.git
-cd obsidian-a-site
-```
-||||||| parent of 644f23f (agregada la funcionalidad para instalar como plugin)
-### 1. Clonar el repositorio
-Clona el proyecto en tu máquina local:
-```bash
-git clone https://github.com/TU_USUARIO/obsidian-a-site.git
-cd obsidian-a-site
-```
-=======
 Elige el método de exportación que prefieras:
->>>>>>> 644f23f (agregada la funcionalidad para instalar como plugin)
 
 ### 🔌 Opción A: Como Plugin de Obsidian (Recomendado)
 
@@ -93,10 +80,12 @@ Elige el método de exportación que prefieras:
      * **Directorio de Salida**: Ruta donde se guardará el sitio web (deja vacío para usar la carpeta `wiki-dist` en tu bóveda).
      * **Título y Subtítulo**: Títulos y textos descriptivos en el panel lateral y cabecera HTML.
      * **Página Inicial**: El ID de la nota inicial (por defecto `index`).
+     * **Incluir Notas Huérfanas**: Un interruptor Toggle para decidir si deseas exportar o no las notas desconectadas sin enlaces entrantes.
 
 3. **Exportación**:
    * Haz clic en el icono del logo de compartir `⚡` (Ribbon Icon) en la barra lateral izquierda de Obsidian, o usa el comando `Compilar y Exportar Wiki Estática` en la paleta de comandos (`Ctrl/Cmd + P`).
-   * Aparecerá una notificación nativa cuando el proceso finalice con éxito.
+   * Aparecerá una ventana modal emergente donde podrás revisar y ajustar las configuraciones rápidamente antes de presionar **⚡ Exportar y Compilar**.
+   * Una notificación en pantalla te avisará al finalizar con éxito.
 
 ---
 
@@ -104,7 +93,7 @@ Elige el método de exportación que prefieras:
 
 1. **Clonar el repositorio**:
    ```bash
-   git clone https://github.com/TU_USUARIO/obsidian-a-site.git
+   git clone https://github.com/horaciod/obsidian-a-site.git
    cd obsidian-a-site
    ```
 
@@ -112,15 +101,16 @@ Elige el método de exportación que prefieras:
    Ejecuta `build.js` con Node.js pasando la ruta origen (`-o`) y destino (`-d`). También puedes pasar configuraciones personalizadas opcionales:
 
    ```bash
-   node build.js -o /ruta/a/tus/notas/obsidian -d ./dist --title "Mi Wiki" --subtitle "Mis Notas" --home "README"
+   node build.js -o /ruta/a/tus/notas/obsidian -d ./dist --title "Mi Wiki" --subtitle "Mis Notas" --home "README" --no-orphans
    ```
 
-   *   **`-o`**: Carpeta de origen con tus notas `.md` e imágenes.
+   *   **`-o`**: Carpeta de origen con tus notas `.md` e imágenes (se escanean recursivamente subcarpetas de hasta 4 niveles).
    *   **`-d`**: Carpeta de destino donde se generará la aplicación estática.
    *   **`--title`**: Título del sitio web (para `<title>` y panel lateral).
    *   **`--subtitle`**: Subtítulo o texto explicativo del logo lateral.
    *   **`--home`**: ID de la nota inicial de aterrizaje (ej. `README` en vez de `index`).
    *   **`--desc`**: Descripción meta SEO del sitio.
+   *   **`--no-orphans`**: Bandera opcional para **excluir** las notas huérfanas (sin enlaces entrantes) del compilado final (por defecto se incluyen).
 
 ### 3. Servir el sitio web localmente
 Debido a que la aplicación carga la base de datos `data.json` de forma asíncrona mediante `fetch()`, el sitio web debe abrirse a través de un servidor HTTP local (para evitar restricciones de CORS del navegador al abrir archivos locales `file://`).

@@ -8,7 +8,8 @@ const DEFAULT_SETTINGS = {
   siteTitle: 'Mi Obsidian Wiki',
   siteSubtitle: 'Notas y Relaciones',
   siteDescription: 'Portal interactivo de notas exportadas desde mi bóveda de Obsidian.',
-  homeNote: 'index'
+  homeNote: 'index',
+  includeOrphans: true
 };
 
 class ObsidianSitePlugin extends Plugin {
@@ -99,7 +100,8 @@ class ObsidianSitePlugin extends Plugin {
         siteTitle: this.settings.siteTitle,
         siteSubtitle: this.settings.siteSubtitle,
         siteDescription: this.settings.siteDescription,
-        homeNote: this.settings.homeNote
+        homeNote: this.settings.homeNote,
+        includeOrphans: this.settings.includeOrphans
       });
 
       if (result && result.success) {
@@ -207,6 +209,18 @@ class ObsidianSiteSettingTab extends PluginSettingTab {
           await this.plugin.saveSettings();
         })
       );
+
+    // 7. Include Orphans setting
+    new Setting(containerEl)
+      .setName('Incluir Notas Huérfanas')
+      .setDesc('Si se activa, se incluirán las notas que no tienen enlaces entrantes en tu bóveda. Si se desactiva, se excluirán por completo de la wiki.')
+      .addToggle(toggle => toggle
+        .setValue(this.plugin.settings.includeOrphans)
+        .onChange(async (value) => {
+          this.plugin.settings.includeOrphans = value;
+          await this.plugin.saveSettings();
+        })
+      );
   }
 }
 
@@ -285,6 +299,15 @@ class ExportModal extends Modal {
         .setPlaceholder('Ej: index')
         .setValue(this.settings.homeNote)
         .onChange(value => this.settings.homeNote = value)
+      );
+
+    // 7. Include Orphans setting
+    new Setting(contentEl)
+      .setName('Incluir Notas Huérfanas')
+      .setDesc('Incluir notas desconectadas sin enlaces entrantes en el compilado.')
+      .addToggle(toggle => toggle
+        .setValue(this.settings.includeOrphans)
+        .onChange(value => this.settings.includeOrphans = value)
       );
 
     // Buttons

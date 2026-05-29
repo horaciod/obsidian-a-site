@@ -14,6 +14,7 @@ const path = require('path');
  * @param {string} [config.siteDescription] SEO Meta Description.
  * @param {string} [config.homeNote] Landing/Index note ID (without .md).
  * @param {string} [config.breadcrumbHomeText] Breadcrumbs home node name.
+ * @param {boolean} [config.includeOrphans] Whether to include orphan notes (default: true).
  */
 function runBuild(config) {
   const originDir = config.originDir;
@@ -25,10 +26,11 @@ function runBuild(config) {
     console.error('  -o : Directorio que contiene las notas Markdown (.md) y los recursos.');
     console.error('  -d : Directorio destino donde se generará la web autocontenida para producción.');
     console.error('Opciones opcionales:');
-    console.error('  --title    : Título del sitio web (para <title> y el panel lateral).');
-    console.error('  --subtitle : Subtítulo o texto descriptivo en el panel lateral.');
-    console.error('  --home     : Nota de inicio (sin extensión .md, ej. "Home" o "README").');
-    console.error('  --desc     : Meta descripción para SEO.');
+    console.error('  --title       : Título del sitio web (para <title> y el panel lateral).');
+    console.error('  --subtitle    : Subtítulo o texto descriptivo en el panel lateral.');
+    console.error('  --home        : Nota de inicio (sin extensión .md, ej. "Home" o "README").');
+    console.error('  --desc        : Meta descripción para SEO.');
+    console.error('  --no-orphans  : Excluir las notas huérfanas (sin enlaces entrantes) del sitio generado.');
     
     if (require.main === module) {
       process.exit(1);
@@ -69,6 +71,7 @@ function runBuild(config) {
   const siteDescription = config.siteDescription || 'Portal interactivo de documentación para la implementación del SIG, ProxyManager y Anubis. Visualiza notas de forma dinámica y explora sus relaciones.';
   const homeNote = config.homeNote || 'index';
   const breadcrumbHomeText = config.breadcrumbHomeText || (config.siteTitle ? config.siteTitle.split(' ')[0] : 'SIG');
+  const includeOrphans = config.includeOrphans !== false; // default to true
 
   // 1. Process and copy Template Assets to destination with placeholders replaced
   const textTemplates = ['index.html', 'app.js'];
@@ -111,13 +114,51 @@ function runBuild(config) {
     }
   });
 
-  // 2. Scan resolvedOrigin for Markdown and Asset files
-  const files = fs.readdirSync(resolvedOrigin);
-  const mdFiles = files.filter(f => f.endsWith('.md') && f !== 'README.md');
+  // 2. Scan resolvedOrigin recursively up to 4 levels of depth
+  const mdFiles = [];     // Array of objects: { relativePath, absolutePath, noteName }
+  const assetFiles = [];  // Array of objects: { relativePath, absolutePath, filename }
   
   // Supported web formats for copying
   const assetExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.svg', '.webp', '.pdf', '.mp4', '.mp3'];
-  const assetFiles = files.filter(f => assetExtensions.includes(path.extname(f).toLowerCase()));
+  const ignoredDirs = new Set(['.git', 'node_modules', '.obsidian', 'wiki-dist', 'dist', 'dist-test', 'dist-test-custom', path.basename(resolvedDest)]);
+
+  function walk(currentDir, depth = 0) {
+    if (depth > 4) return;
+
+    const items = fs.readdirSync(currentDir, { withFileTypes: true });
+    for (const item of items) {
+      const absPath = path.join(currentDir, item.name);
+      const relPath = path.relative(resolvedOrigin, absPath);
+
+      if (item.isDirectory()) {
+        if (ignoredDirs.has(item.name) || absPath === resolvedDest) continue;
+        walk(absPath, depth + 1);
+      } else if (item.isFile()) {
+        const ext = path.extname(item.name).toLowerCase();
+        if (ext === '.md') {
+          // Ignore the root README.md specifically
+          if (relPath === 'README.md') continue;
+
+          const noteName = path.basename(item.name, '.md');
+          mdFiles.push({
+            relativePath: relPath,
+            absolutePath: absPath,
+            noteName: noteName
+          });
+        } else if (assetExtensions.includes(ext)) {
+          assetFiles.push({
+            relativePath: relPath,
+            absolutePath: absPath,
+            filename: item.name
+          });
+        }
+      }
+    }
+  }
+
+  // Start walking origin folder recursively
+  walk(resolvedOrigin, 0);
+  console.log(`\x1b[32m✔ Escaneo completado: detectados ${mdFiles.length} archivos Markdown y ${assetFiles.length} recursos hasta 4 niveles de profundidad.\x1b[0m`);
 
   const notes = {};
   const graphNodes = [];
@@ -125,16 +166,15 @@ function runBuild(config) {
 
   // Extract valid internal notes Set
   const validNotes = new Set();
-  mdFiles.forEach(file => {
-    const noteName = path.basename(file, '.md');
-    validNotes.add(noteName);
+  mdFiles.forEach(info => {
+    validNotes.add(info.noteName);
   });
 
   // Parse notes contents & relations
-  mdFiles.forEach(file => {
-    const filePath = path.join(resolvedOrigin, file);
+  mdFiles.forEach(info => {
+    const filePath = info.absolutePath;
     const content = fs.readFileSync(filePath, 'utf8');
-    const noteName = path.basename(file, '.md');
+    const noteName = info.noteName;
 
     // Extract wikilinks
     const wikilinkRegex = /\[\[([^\]|#]+)(?:#[^\]|]*)?(?:\|[^\]]*)?\]\]/g;
@@ -159,30 +199,68 @@ function runBuild(config) {
     notes[noteName] = {
       title: noteName,
       content: content,
-      filename: file,
+      filename: info.relativePath, // Keep relative path in database
       links: links,
-      images: images
+      images: images,
+      isOrphan: false // Will be updated below
     };
-
-    graphNodes.push({ id: noteName, label: noteName });
   });
 
-  // Build connection links
-  mdFiles.forEach(file => {
-    const noteName = path.basename(file, '.md');
+  // Calculate incoming links (in-degree) for each note to find orphans
+  const inDegree = {};
+  validNotes.forEach(noteName => {
+    inDegree[noteName] = 0;
+  });
+
+  Object.keys(notes).forEach(noteName => {
     const note = notes[noteName];
-    if (note) {
-      note.links.forEach(target => {
+    note.links.forEach(target => {
+      if (inDegree[target] !== undefined) {
+        inDegree[target]++;
+      }
+    });
+  });
+
+  // Filter and build final notes
+  const finalNotes = {};
+  const activeValidNotes = new Set();
+
+  Object.keys(notes).forEach(noteName => {
+    const note = notes[noteName];
+    const isOrphan = (inDegree[noteName] === 0 && noteName !== homeNote);
+
+    if (isOrphan) {
+      note.isOrphan = true;
+      if (!includeOrphans) {
+        // Skip compile if we don't want orphans
+        return;
+      }
+    }
+
+    finalNotes[noteName] = note;
+    activeValidNotes.add(noteName);
+    graphNodes.push({ 
+      id: noteName, 
+      label: noteName,
+      isOrphan: note.isOrphan
+    });
+  });
+
+  // Build connection links (filtering only included notes)
+  Object.keys(finalNotes).forEach(noteName => {
+    const note = finalNotes[noteName];
+    note.links.forEach(target => {
+      if (activeValidNotes.has(target)) {
         graphLinks.push({
           source: noteName,
           target: target
         });
-      });
-    }
+      }
+    });
   });
 
   const output = {
-    notes,
+    notes: finalNotes,
     graph: {
       nodes: graphNodes,
       links: graphLinks
@@ -191,13 +269,13 @@ function runBuild(config) {
 
   // Save compiled data database
   fs.writeFileSync(path.join(resolvedDest, 'data.json'), JSON.stringify(output, null, 2), 'utf8');
-  console.log(`\x1b[32m✔ Compilado base de datos data.json con ${graphNodes.length} notas y ${graphLinks.length} conexiones.\x1b[0m`);
+  console.log(`\x1b[32m✔ Compilado base de datos data.json con ${graphNodes.length} notas y ${graphLinks.length} conexiones. (${mdFiles.length - graphNodes.length} notas huérfanas filtradas).\x1b[0m`);
 
-  // 3. Sync source images and document assets to destination folder
+  // 3. Sync source images and document assets to destination folder (flat copying)
   let copiedAssets = 0;
-  assetFiles.forEach(file => {
-    const srcPath = path.join(resolvedOrigin, file);
-    const destPath = path.join(resolvedDest, file);
+  assetFiles.forEach(info => {
+    const srcPath = info.absolutePath;
+    const destPath = path.join(resolvedDest, info.filename);
     
     fs.copyFileSync(srcPath, destPath);
     copiedAssets++;
@@ -224,7 +302,8 @@ if (require.main === module) {
     siteLogoText: '',
     siteSubtitle: '',
     siteDescription: '',
-    homeNote: ''
+    homeNote: '',
+    includeOrphans: true
   };
 
   for (let i = 0; i < args.length; i++) {
@@ -247,6 +326,10 @@ if (require.main === module) {
     } else if (args[i] === '--desc') {
       config.siteDescription = args[i + 1];
       i++;
+    } else if (args[i] === '--no-orphans') {
+      config.includeOrphans = false;
+    } else if (args[i] === '--orphans') {
+      config.includeOrphans = true;
     }
   }
 

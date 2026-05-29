@@ -366,6 +366,16 @@ body {
   color: var(--primary);
 }
 
+.notes-item.is-orphan span {
+  font-style: italic;
+  opacity: 0.75;
+}
+
+.notes-item.is-orphan .orphan-indicator-icon {
+  color: #f59e0b !important;
+  opacity: 0.8 !important;
+}
+
 .sidebar-footer {
   padding: 16px 20px;
   border-top: 1px solid var(--panel-border);

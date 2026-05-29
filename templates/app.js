@@ -254,9 +254,13 @@ function renderNotesList() {
     const li = document.createElement('li');
     
     const a = document.createElement('a');
-    a.className = `notes-item ${noteId === state.activeNoteId ? 'active' : ''}`;
+    a.className = `notes-item ${noteId === state.activeNoteId ? 'active' : ''} ${note.isOrphan ? 'is-orphan' : ''}`;
     a.href = `#${encodeURIComponent(noteId)}`;
-    a.innerHTML = `<i data-lucide="file"></i> <span>${note.title}</span>`;
+    
+    const orphanBadge = note.isOrphan 
+      ? ' <i data-lucide="link-2-off" class="orphan-indicator-icon" title="Nota huérfana (sin enlaces entrantes)" style="width: 13px; height: 13px; margin-left: auto;"></i>' 
+      : '';
+    a.innerHTML = `<i data-lucide="file"></i> <span>${note.title}</span>${orphanBadge}`;
     
     a.addEventListener('click', (e) => {
       e.preventDefault();
@@ -489,6 +493,7 @@ function initGraph() {
     return {
       id: n.id,
       label: n.label,
+      isOrphan: n.isOrphan,
       x: r * Math.cos(angle),
       y: r * Math.sin(angle),
       vx: 0,
@@ -850,6 +855,10 @@ function renderGraphFrame() {
       ctx.fillStyle = '#06b6d4';  // Cyan hover
       ctx.strokeStyle = '#ecfeff';
       ctx.lineWidth = 2;
+    } else if (n.isOrphan) {
+      ctx.fillStyle = '#1e293b';  // Slate Gray
+      ctx.strokeStyle = '#f59e0b'; // Amber warning stroke
+      ctx.lineWidth = 1.8;
     } else {
       ctx.fillStyle = '#1e293b';  // Slate Gray
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
